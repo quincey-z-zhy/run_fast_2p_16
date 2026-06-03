@@ -1,0 +1,29 @@
+schema_version: 0.1
+game_id: run_fast_2p_16_v0
+confirmed_by: "auto"
+confirmed_at: "2026-04-15T07:12:00Z"
+
+information_boundary:
+  production_visible_fields:
+    - "own_hand: 当前玩家自己的手牌（cards列表）"
+    - "remain_cards: 每种face在整个牌池中尚未被打出的张数（初始=DECK_COUNTS，随出牌递减）"
+    - "actions_history: 本局所有已执行动作的有序序列（formation/start/end/tail全部可见）"
+    - "current_player_index: 当前行动玩家索引（0或1）"
+    - "is_new_round: 当前是否为新一轮出牌（由 previous_action 推导）"
+    - "is_end: 游戏是否结束"
+    - "num_bomb: 本局已打出的炸弹总数"
+    - "previous_action: 当前玩家须超越的前序有效动作（公开）"
+
+  forbidden_fields:
+    - "opponent_hand: 对手手牌，绝对禁止出现在obs中（obs中不能有任何直接或间接反映对手手牌的字段）"
+    - "dead_cards: 未发出的15张死牌，双方均不可见"
+    - "p0_cards_initial / p1_cards_initial: 初始发牌结果，发牌后立即隐藏"
+
+  derived_allowed:
+    - "inferred_opponent_range: 可由 remain_cards - own_hand - played_cards 推导对手可能持有的牌域（合法推断，不是直接观测）"
+    - "own_cards_out: 当前玩家自己已打出的牌的统计（由自身历史动作推导）"
+    - "hand_size_opponent: 对手剩余手牌数（由初始15张 - 对手历史出牌数推导，完全公开）"
+
+  notes:
+    - "remain_cards 包含死牌，不等于两方手牌之和——这是合法的不确定性，AI 无法区分死牌和对手手牌"
+    - "禁止在 obs 中直接或通过归一化方式泄露对手手牌；一旦泄露将导致全量重训"

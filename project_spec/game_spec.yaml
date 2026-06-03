@@ -1,0 +1,109 @@
+schema_version: 0.1
+project:
+  name: "run_fast_2p_16_v0"
+  family: "card_game"
+  description: "两人不完全信息纸牌对战游戏（16-hand 变种）：48 张牌池（3-K 各 4 张，A=3，2=1），各发 16 张，先出完者获胜，按对手剩余牌数计分"
+
+production_profile_ref: production_profile.yaml
+
+players:
+  min_players: 2
+  max_players: 2
+  default_players: 2
+  seat_rotation: "per_episode"  # 先手随机，等效为每局重新分配
+
+information_model:
+  imperfect_information: true
+  public_information:
+    - "remain_cards：每种face在整个牌池中尚未被打出的张数（初始=DECK_COUNTS）"
+    - "动作历史：本局所有已执行动作的有序序列"
+    - "当前行动玩家索引（0或1）"
+    - "游戏是否结束（is_end）"
+    - "炸弹总数（num_bomb）"
+  private_information:
+    - "各玩家自己的手牌（对手手牌不可见）"
+  conditionally_visible_information: []
+
+state_machine:
+  phases:
+    - init
+    - acting
+    - terminal
+  current_player_advances_on:
+    - "任意出牌动作（formation != none）"
+    - "不出（pass, formation == none）"
+  terminal_conditions:
+    - "当前玩家出完最后一张手牌（player.is_done == True）"
+
+actions:
+  type: discrete
+  num_actions: -1  # 动态，取决于手牌构成与当前局面，env-development 阶段精确定义
+  action_space_note: "动作空间规模大（初估>10000），RL实现需使用 action masking；精确枚举及编码方案由 env-development 确定"
+  formations:
+    - id: 0
+      name: "不出（Pass）"
+      code: "none"
+      semantics: "放弃本轮出牌权，切换到对手；is_new_round 时禁用；强制跟牌规则：is_new_round=False 时若存在合法非 Pass 动作（同型更大或炸弹），则 Pass 同样禁用"
+    - id: 1
+      name: "单牌"
+      code: "single"
+      semantics: "出一张单牌；face ∈ [3,15]；跟牌须同型 face 更大"
+    - id: 2
+      name: "对子"
+      code: "pocket"
+      semantics: "相同 face 两张；face ∈ [3,13]；跟牌须同型 face 更大"
+    - id: 3
+      name: "连对"
+      code: "s_pocket"
+      semantics: "连续 N 对（N∈[2,7]），face ∈ [3,13]；跟牌须同型同长度 start_face 更大"
+    - id: 4
+      name: "三条"
+      code: "trips"
+      semantics: "相同 face 三张（face∈[3,13]）带0/1/2单牌；带牌face≠主face，同face带牌≤3张；跟牌须同型同带牌数 main_face 更大"
+    - id: 5
+      name: "飞机"
+      code: "s_trips"
+      semantics: "连续 N 组三条（N∈[2,4]，face∈[3,13]）带0/N/2N单牌；带牌face不在主face集合内；跟牌须同型同长度同带牌数 start_face 更大"
+    - id: 6
+      name: "四带"
+      code: "quads"
+      semantics: "相同 face 四张（face∈[3,12]）带0/1/2/3单牌；带牌face≠主face；跟牌须同型同带牌数 main_face 更大"
+    - id: 7
+      name: "顺子"
+      code: "straight"
+      semantics: "连续 N 张单牌（N∈[5,12]），face∈[3,14]（2不入顺）；跟牌须同型同长度 start_face 更大"
+    - id: 8
+      name: "炸弹"
+      code: "bomb"
+      semantics: "相同 face 四张无带牌（face∈[3,12]）；压制所有非炸弹；炸弹间 face 大者胜；打出即时+10分"
+
+settlement:
+  reward_basis: "score_based"
+  zero_sum_like: true
+  scoring:
+    base_score: "败者剩余手牌数 × 1"
+    spring_bonus: 30
+    bomb_bonus_per_bomb: 10
+    bomb_bonus_attribution: "归打出炸弹的玩家，与胜负无关"
+    winner_score_formula: "base_score + spring_bonus(if_spring) + winner_bomb_bonuses"
+    loser_score_formula: "-(base_score + spring_bonus(if_spring)) + loser_bomb_bonuses"
+  note: "输家在打出足够炸弹时得分可为正值；炸弹奖励独立于基础分"
+
+runtime_constraints:
+  must_align_with_production: true
+  allow_debug_profiles: true
+  gpu_candidate: true
+  notes:
+    - "无回放数据，环境验证依赖随机压测与人工对局"
+    - "先手随机，训练时需覆盖两种先手情况"
+
+source_mapping:
+  rule_docs:
+    - "docs/rules_confirmed.md"
+  replay_sources: []
+  existing_code:
+    - "game/config.py"
+    - "game/action.py"
+    - "game/player.py"
+    - "game/game.py"
+    - "game/cards.py"

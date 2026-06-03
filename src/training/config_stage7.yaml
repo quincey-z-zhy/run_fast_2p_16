@@ -1,0 +1,49 @@
+# PPO 正式训练超参数配置（Stage 7）
+# 基于 Stage 6 基线结果调整，引入自博弈对手
+
+training:
+  total_steps: 5_000_000        # 总训练步数（自博弈收敛更慢，2.5x Stage 6）
+  n_steps: 2048                  # 每次 rollout 收集的步数
+  batch_size: 512                # mini-batch 大小
+  n_epochs: 4                    # 每次 rollout 的 PPO 更新轮数
+  eval_freq: 100_000             # 每多少步评估一次（Stage 6 的 2x，避免评估开销）
+  eval_games: 500                # 评估对局数
+  checkpoint_freq: 200_000       # 每多少步保存 checkpoint
+  log_freq: 2000                 # 每多少步打印日志
+
+ppo:
+  learning_rate: 3.0e-4
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_eps: 0.2
+  value_coeff: 0.5
+  entropy_coeff: 0.02            # Stage 6 的 2x：自博弈需要更多探索
+  max_grad_norm: 0.5
+  normalize_advantages: true
+
+network:
+  obs_dim: 80
+  act_dim: 294
+  hidden_dim: 256
+
+# 自博弈配置
+self_play:
+  enabled: true
+  opponent_init: checkpoints/best.pt   # 初始对手：Stage 6 最优模型
+  update_freq: 200_000                  # 每多少步将当前模型复制给对手
+
+# 评估配置（Stage 7 同时评估两个对手）
+eval_opponents:
+  - random_legal
+  - greedy_low
+
+training_opponent: self_play     # 记录用，实际由 self_play 配置控制
+
+eval_thresholds:
+  stage_6_baseline: 0.65         # vs random_legal 达标线（已超过）
+  stage_7_main: 0.80             # vs random_legal 正式训练目标
+  stage_7_heuristic: 0.80        # vs greedy_low 正式训练目标
+
+paths:
+  checkpoint_dir: checkpoints/
+  log_dir: logs/training/

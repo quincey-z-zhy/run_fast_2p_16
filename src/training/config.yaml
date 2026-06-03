@@ -1,0 +1,57 @@
+# PPO 训练超参数配置
+# 两阶段带牌优化版 — 从零训练
+
+training:
+  total_steps: 10_000_000_000     # 100 亿步长训练
+  n_steps: 2048                    # 每次 rollout 收集的步数（跨所有并行环境）
+  num_envs: 16                     # 并行游戏子进程数（每进程收集 n_steps/num_envs 步）
+  batch_size: 512                  # mini-batch 大小
+  n_epochs: 4                      # 每次 rollout 的 PPO 更新轮数
+  eval_freq: 100_000               # 每多少步评估一次
+  eval_games: 500                  # 评估对局数（快速评估用）
+  checkpoint_freq: 200_000         # 每多少步保存 checkpoint
+  log_freq: 2000                   # 每多少步打印日志
+
+ppo:
+  learning_rate: 3.0e-4
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_eps: 0.2
+  value_coeff: 0.5
+  entropy_coeff: 0.05              # 提高熵系数，防止策略过早收敛（自博弈易崩塌）
+  max_grad_norm: 0.5
+  normalize_advantages: true
+
+network:
+  obs_dim: 80
+  act_dim: 294
+  hidden_dim: 256
+
+# 自博弈配置：前 1M 步 vs random，之后切换自博弈
+self_play:
+  enabled: false
+  opponent_init: null              # 从当前模型初始化对手
+  update_freq: 500_000             # 每 50 万步同步对手权重
+
+eval_opponents:
+  - random_legal
+  - greedy_low
+
+eval_thresholds:
+  stage_7_main: 0.80               # vs random_legal 目标
+  stage_7_heuristic: 0.65          # vs greedy_low 目标
+
+paths:
+  checkpoint_dir: checkpoints/
+  log_dir: logs/training/
+
+# 联赛训练配置（League Training，来自 fast_run_ai）
+# 启用时将 self_play.enabled 设为 false，league.enabled 设为 true
+league:
+  enabled: true
+  tracker_n: 200          # 胜率滑动窗口大小（局数），对应 fast_run_ai 的 nmin=nmax
+  last_num: 30            # PFSP 考虑的最近历史对手数
+  sp_prob: 0.2            # 每次重采样时选择自博弈的概率（fast_run_ai 默认 0.2）
+  switch_prob: 0.01       # 每局结束时触发对手切换的概率（fast_run_ai next_oppo_prob）
+  snapshot_upscore: 2.0   # 对所有近期对手平均得分均超过此值时触发快照
+  snapshot_gap: 1_000_000 # 实际禁用强制触发（8M步≈3906次更新，远小于100万）

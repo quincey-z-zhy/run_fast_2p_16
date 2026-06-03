@@ -1,0 +1,22 @@
+schema_version: 0.1
+
+rule_sources:
+  - type: "file"
+    path: "game/"
+    description: "游戏核心代码（config.py / action.py / player.py / game.py），已完整阅读并经 Bug 审查确认无误"
+    quality: "high"
+
+replay_sources:
+  - path: null
+    format: null
+    estimated_episodes: 0
+    quality: "unknown"
+
+existing_code:
+  - path: "game/"
+    description: "从 run_fast_2p/game 复制的游戏核心，经 Bug 审查确认无误，直接用作 engine 层"
+
+notes:
+  - "无回放数据，obs 设计与策略完全由 AI 自主决定"
+  - "规则来源为代码实现，质量高，无歧义，以代码行为为最终裁决依据"
+  - "用户选定策略方向：PPO 自我博弈（Deep RL）"

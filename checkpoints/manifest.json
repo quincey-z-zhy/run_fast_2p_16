@@ -1,0 +1,30 @@
+{
+  "checkpoints": {
+    "best.pt": {
+      "step": 501760,
+      "eval": {
+        "win_rate_vs_random_legal": 0.795,
+        "win_rate_vs_greedy_low": 0.735
+      },
+      "created_at": "2026-05-29T08:36:49.494755+00:00"
+    },
+    "step_251904.pt": {
+      "step": 251904,
+      "eval": {},
+      "created_at": "2026-05-29T08:32:23.584400+00:00"
+    },
+    "step_501760.pt": {
+      "step": 501760,
+      "eval": {},
+      "created_at": "2026-05-29T08:36:49.499056+00:00"
+    },
+    "baseline.pt": {
+      "step": 501760,
+      "eval": {
+        "win_rate_vs_random": 0.735
+      },
+      "created_at": "2026-05-29T08:36:49.501731+00:00"
+    }
+  },
+  "retention_policy": "keep_latest_5_plus_best_plus_baseline"
+}

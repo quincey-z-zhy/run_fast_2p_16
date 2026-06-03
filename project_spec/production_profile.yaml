@@ -1,0 +1,46 @@
+schema_version: 0.1
+profile_id: standard_2p
+game_id: run_fast_2p_16_v0
+description: "两人跑得快 16-hand 变种对战配置"
+
+table:
+  num_players: 2
+  deck_counts:
+    3: 4
+    4: 4
+    5: 4
+    6: 4
+    7: 4
+    8: 4
+    9: 4
+    10: 4
+    11: 4
+    12: 4
+    13: 4  # K
+    14: 3  # A
+    15: 1  # 2
+  total_cards: 48
+  hand_size: 16
+  dead_cards: 16
+
+game_settings:
+  first_player: "random"   # "random" | 0 | 1
+  timeout_per_action: null # 无超时约束（未来可配置）
+  allow_illegal_action: false
+
+scoring:
+  card_score: 1
+  bomb_bonus: 10
+  spring_score: 32
+
+info_boundary:
+  visible_to_current_player:
+    - "own_hand"
+    - "remain_cards"
+    - "action_history"
+    - "current_player_index"
+    - "is_end"
+    - "num_bomb"
+  forbidden_fields:
+    - "opponent_hand"
+    - "dead_cards"

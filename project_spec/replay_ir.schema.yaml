@@ -1,0 +1,64 @@
+schema_version: 0.1
+game_id: run_fast_2p_16_v0
+
+# 本项目无回放数据，此 schema 为标准模板实例化，供未来录入数据时参考
+
+root:
+  type: episode_list
+  item_required_fields:
+    - episode_id
+    - table_config
+    - players
+    - initial_state
+    - events
+    - final_result
+
+episode:
+  episode_id: string  # 唯一局标识，如 "ep_000001"
+  table_config:
+    num_players: 2
+    stakes: {}
+    production_profile: "standard_2p"
+  players:
+    - seat: int        # 0 或 1
+      player_id: string
+      meta: {}
+  initial_state:
+    first_player: int            # 先手玩家索引（0 或 1）
+    p0_hand: list[int]           # 玩家0初始手牌（面值列表，升序）
+    p1_hand: list[int]           # 玩家1初始手牌
+    dead_cards_count: 15         # 死牌数量（固定，不记录具体牌面）
+  events:
+    - step_id: int               # 从0开始，严格递增
+      event_type: string         # "play" | "pass" | "terminal"
+      actor_seat: int            # 当前行动玩家
+      payload:
+        formation: string        # 牌型code，如 "single" / "bomb" / "none"
+        start_card: int          # 主牌起始面值（pass 时为 null）
+        end_card: int            # 主牌结束面值（顺牌型使用，否则 null）
+        tail_cards: list[int]    # 带牌列表（升序，pass 时为 []）
+      public_snapshot:
+        remain_cards: dict       # 每种 face 剩余张数
+        is_new_round: bool
+      private_refs: {}
+  final_result:
+    terminal_type: string        # "normal" | "spring"
+    winner_seat: int
+    loser_remaining_cards: int   # 败者剩余手牌数
+    is_spring: bool
+    rewards:
+      seat_0: int                # 玩家0最终得分（正=赢，负=输）
+      seat_1: int
+    settlement:
+      base_score: int
+      spring_bonus: int
+      bomb_bonus_seat_0: int
+      bomb_bonus_seat_1: int
+      num_bomb: int
+  parse_confidence:
+    value: 1.0
+    reason: "程序生成，置信度最高"
+  missing_fields: []
+  source_ref:
+    path: ""
+    line_or_offset: ""

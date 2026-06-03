@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.1",
+  "registered_at": "2026-05-29T00:00:00Z",
+  "baselines": {
+    "random_legal": {
+      "description": "从合法动作中均匀随机采样",
+      "impl": "src/eval/baselines.py::RandomLegalAgent",
+      "status": "verified"
+    },
+    "greedy_low": {
+      "description": "优先出面值最低的合法牌型，尽量不pass",
+      "impl": "src/eval/baselines.py::GreedyLowAgent",
+      "status": "verified"
+    }
+  },
+  "eval_configs": {
+    "standard_1k": {
+      "num_episodes": 1000,
+      "seed": 42,
+      "first_player_split": "equal",
+      "description": "标准评估配置，1000局均等先手"
+    }
+  },
+  "thresholds": {
+    "stage_6_baseline": {"vs": "random_legal", "win_rate": 0.65},
+    "stage_7_main": {"vs": "random_legal", "win_rate": 0.80},
+    "stage_7_heuristic": {"vs": "greedy_low", "win_rate": 0.60},
+    "delivery": {"vs": "greedy_low", "win_rate": 0.65}
+  },
+  "models": {}
+}

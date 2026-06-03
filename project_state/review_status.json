@@ -1,0 +1,44 @@
+{
+  "docs/rules_confirmed.md": {
+    "status": "auto_approved",
+    "updated_at": "2026-04-15T07:08:00Z",
+    "reviewer": "auto",
+    "note": null
+  },
+  "project_spec/game_spec.yaml": {
+    "status": "auto_approved",
+    "updated_at": "2026-04-15T07:08:00Z",
+    "reviewer": "auto",
+    "note": null
+  },
+  "docs/obs_design.md": {
+    "status": "auto_approved",
+    "updated_at": "2026-04-15T07:18:00Z",
+    "reviewer": "auto",
+    "note": null
+  },
+  "docs/obs_review.md": {
+    "status": "auto_approved",
+    "updated_at": "2026-04-15T07:48:00Z",
+    "reviewer": "auto",
+    "note": "质量检测通过（3项），专家评估评级 A，full-auto 自动审核通过"
+  },
+  "docs/eval_method.md": {
+    "status": "auto_approved",
+    "updated_at": "2026-04-15T07:48:00Z",
+    "reviewer": "auto",
+    "note": "质量检测通过（3项），full-auto 自动审核通过"
+  },
+  "docs/strategy_analysis.md": {
+    "status": "auto_approved",
+    "updated_at": "2026-04-15T08:02:00Z",
+    "reviewer": "auto",
+    "note": "质量检测通过（3项），对抗审查无 P0 问题（P1 已修正 CFR 说明，P2 记录于 adversarial_review_stage_5.md），full-auto 自动审核通过"
+  },
+  "reports/training_report.md": {
+    "status": "auto_approved",
+    "updated_at": "2026-04-16T14:30:00Z",
+    "reviewer": "auto",
+    "note": "质量检测通过（占位符/中文/完整性三项），full-auto 自动审核通过。训练结论如实记录 vs greedy_low 77.4% 未达 80% 目标，含成因分析。"
+  }
+}

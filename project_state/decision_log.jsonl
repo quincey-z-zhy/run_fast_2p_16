@@ -1,0 +1,4 @@
+{"stage":"stage_5","decision":"strategy_selection","key":"ppo_self_play","detail":"无回放数据排除 SL/Hybrid；信息集规模超出 tabular CFR 上限；Deep CFR 无中文纸牌同域先例；PPO 自博弈在 Suphx/DouZero 同域验证充分；用户偏好 PPO","ts":"2026-04-15T08:05:00Z"}
+{"stage":"stage_5","decision":"cfr_rejection","key":"tabular_cfr_infeasible","detail":"初始手牌计数向量约 10^5-10^6，随动作序列分支总信息集 ≥ 10^8，超出 tabular CFR 内存承受范围","ts":"2026-04-15T08:05:00Z"}
+{"stage":"stage_5","decision":"fallback_strategy","key":"nfsp_trigger_condition","detail":"PPO Stage 6 在 1M steps 后 vs random_legal 胜率 < 40% 时触发 NFSP 备选评估","ts":"2026-04-15T08:05:00Z"}
+{"stage":"stage_6","decision":"bug_fix","key":"bomb_action_mask","detail":"action_generator.compute_action_mask 的 Bomb 分段未调用 _check_beats_prev，导致弱炸弹（如8888）在对方出了更大炸弹（如TTTT）时被错误标记为合法动作；修复：为每个 bomb 动作调用 _check_beats_prev 检查大小关系","ts":"2026-04-15T17:58:00Z"}

@@ -1,0 +1,11 @@
+{
+  "strategy": "rl",
+  "reasoning": "两人不完美信息零和博弈，无回放数据（排除 SL/Hybrid），信息集规模约 3.4×10^9 量级（排除 tabular CFR），Deep CFR 无同域先例且实现风险高；PPO 自博弈在麻将（Suphx）和斗地主（DouZero）等相似中文纸牌游戏中经过充分验证，67 维 obs + 270 维 action masking 基础设施已在 Stage 4 验证通过；用户明确偏好 PPO 自博弈路线。",
+  "gpu_required": true,
+  "sub_strategy": "ppo",
+  "self_play": true,
+  "decided_at": "2026-04-15T07:55:00Z",
+  "decided_by": "auto",
+  "fallback_strategy": "nfsp",
+  "fallback_trigger": "PPO 在 Stage 6 基线训练中无法在 1M steps 内达到 vs random_legal 胜率 40%"
+}

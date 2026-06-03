@@ -1,0 +1,136 @@
+{
+  "artifacts": {
+    "rules_confirmed": {
+      "status": "verified",
+      "file": "docs/rules_confirmed.md",
+      "updated_at": "2026-04-15T07:08:00Z",
+      "updated_by": "stage-review"
+    },
+    "game_spec": {
+      "status": "verified",
+      "file": "project_spec/game_spec.yaml",
+      "updated_at": "2026-04-15T07:08:00Z",
+      "updated_by": "stage-review"
+    },
+    "unknown_rules": {
+      "status": "verified",
+      "file": "docs/unknown_rules.md",
+      "updated_at": "2026-04-15T07:08:00Z",
+      "updated_by": "stage-review"
+    },
+    "replay_ir_schema": {
+      "status": "verified",
+      "file": "project_spec/replay_ir.schema.yaml",
+      "updated_at": "2026-04-15T07:08:00Z",
+      "updated_by": "stage-review"
+    },
+    "production_profile": {
+      "status": "verified",
+      "file": "project_spec/production_profile.yaml",
+      "updated_at": "2026-04-15T07:08:00Z",
+      "updated_by": "stage-review"
+    },
+    "replay_ir_quality_report": {
+      "status": "verified",
+      "file": "reports/replay_ir_quality_report.md",
+      "updated_at": "2026-04-15T07:08:00Z",
+      "updated_by": "stage-review"
+    },
+    "obs_design": {
+      "status": "verified",
+      "file": "docs/obs_design.md",
+      "updated_at": "2026-04-15T07:18:00Z",
+      "updated_by": "stage-review"
+    },
+    "obs_action_contract": {
+      "status": "verified",
+      "file": "project_spec/obs_action_contract.yaml",
+      "updated_at": "2026-04-15T07:18:00Z",
+      "updated_by": "stage-review"
+    },
+    "info_boundary": {
+      "status": "verified",
+      "file": "project_spec/info_boundary.yaml",
+      "updated_at": "2026-04-15T07:18:00Z",
+      "updated_by": "stage-review"
+    },
+    "obs_review": {
+      "status": "verified",
+      "file": "docs/obs_review.md",
+      "updated_at": "2026-04-15T07:48:00Z",
+      "updated_by": "stage-review"
+    },
+    "eval_method": {
+      "status": "verified",
+      "file": "docs/eval_method.md",
+      "updated_at": "2026-04-15T07:48:00Z",
+      "updated_by": "stage-review"
+    },
+    "eval_registry": {
+      "status": "verified",
+      "file": "project_state/eval_registry.json",
+      "updated_at": "2026-04-15T07:48:00Z",
+      "updated_by": "stage-review"
+    },
+    "replay_validation_report": {
+      "status": "verified",
+      "file": "reports/replay_validation_report.md",
+      "updated_at": "2026-04-15T07:48:00Z",
+      "updated_by": "stage-review"
+    },
+    "env_perf_report": {
+      "status": "verified",
+      "file": "reports/env_perf_report.md",
+      "updated_at": "2026-04-15T07:48:00Z",
+      "updated_by": "stage-review"
+    },
+    "expert_review_report": {
+      "status": "verified",
+      "file": "reports/expert_review_report.md",
+      "updated_at": "2026-04-15T07:48:00Z",
+      "updated_by": "stage-review"
+    },
+    "strategy_analysis": {
+      "status": "verified",
+      "file": "docs/strategy_analysis.md",
+      "updated_at": "2026-04-15T08:02:00Z",
+      "updated_by": "stage-review"
+    },
+    "ai_strategy_decision": {
+      "status": "verified",
+      "file": "project_state/ai_strategy_decision.json",
+      "updated_at": "2026-04-15T08:02:00Z",
+      "updated_by": "stage-review"
+    },
+    "ai_strategy_comparison": {
+      "status": "verified",
+      "file": "reports/ai_strategy_comparison.md",
+      "updated_at": "2026-04-15T08:02:00Z",
+      "updated_by": "stage-review"
+    },
+    "strategy_decision_audit": {
+      "status": "verified",
+      "file": "reports/strategy_decision_audit.md",
+      "updated_at": "2026-04-15T08:02:00Z",
+      "updated_by": "stage-review"
+    },
+    "adversarial_review_stage_5": {
+      "status": "verified",
+      "file": "reports/adversarial_review_stage_5.md",
+      "updated_at": "2026-04-15T08:02:00Z",
+      "updated_by": "stage-review"
+    },
+    "gpu_parity_report": {
+      "status": "verified",
+      "file": "reports/gpu_parity_report.md",
+      "updated_at": "2026-04-15T08:20:00Z",
+      "updated_by": "ai-strategy"
+    },
+    "gpu_benchmark_report": {
+      "status": "verified",
+      "file": "reports/gpu_benchmark_report.md",
+      "updated_at": "2026-04-15T08:20:00Z",
+      "updated_by": "ai-strategy"
+    }
+  }
+}

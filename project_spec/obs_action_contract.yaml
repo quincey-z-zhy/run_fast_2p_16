@@ -1,0 +1,176 @@
+schema_version: 0.1
+game_id: run_fast_2p_16_v0
+contract_version: "1.0"
+confirmed_at: "2026-05-29T00:00:00Z"
+
+obs:
+  name: default_obs
+  dtype: float32
+  total_dim: 80
+  review_required: true
+  sections:
+    - name: own_hand
+      start: 0
+      end: 12
+      dim: 13
+      semantics: "当前玩家手牌计数，每维对应一种牌面（face 3..15 升序），值为该牌在手牌中的张数，除以该牌的最大可能张数（归一化到[0,1]）。face对应索引：0=3,1=4,...,9=Q,10=K,11=A,12=2"
+      visibility_source: private
+      production_derivable: true
+      must_have: true
+      review_required: true
+      encoding:
+        type: normalized_count
+        max_counts: [4,4,4,4,4,4,4,4,4,4,4,3,1]  # 16-hand 变种：3-K 各 4，A=3，2=1  # face 3..2 各自最大张数
+    - name: remain_cards
+      start: 13
+      end: 25
+      dim: 13
+      semantics: "每种牌面在整个牌池中尚未打出的张数（公共可见），每维对应 face 3..15，归一化到[0,1]（除以 DECK_COUNTS[face]）"
+      visibility_source: public
+      production_derivable: true
+      must_have: true
+      review_required: true
+      encoding:
+        type: normalized_count
+        max_counts: [4,4,4,4,4,4,4,4,4,4,4,3,1]  # 16-hand 变种：3-K 各 4，A=3，2=1
+    - name: last_action_formation
+      start: 26
+      end: 34
+      dim: 9
+      semantics: "上一个有效出牌动作的牌型 one-hot 编码（共9种牌型：none/single/pocket/s_pocket/trips/s_trips/quads/straight/bomb按 FORMATIONS 值排序）；若 is_new_round=True（无上家牌）则全零"
+      visibility_source: public
+      production_derivable: true
+      must_have: true
+      review_required: false
+      encoding:
+        type: one_hot
+        categories: [0,1,2,3,8,9,12,13,14]  # FORMATIONS 值按升序
+    - name: last_action_start_face
+      start: 35
+      end: 47
+      dim: 13
+      semantics: "上一有效动作的 start_card one-hot（face 3..15 → 索引0..12）；is_new_round 时全零"
+      visibility_source: public
+      production_derivable: true
+      must_have: true
+      review_required: false
+      encoding:
+        type: one_hot
+        categories: [3,4,5,6,7,8,9,10,11,12,13,14,15]
+    - name: last_action_end_face
+      start: 48
+      end: 60
+      dim: 13
+      semantics: "上一有效动作的 end_card one-hot（face 3..15）；非顺牌型或 is_new_round 时全零"
+      visibility_source: public
+      production_derivable: true
+      must_have: false
+      review_required: false
+      encoding:
+        type: one_hot
+        categories: [3,4,5,6,7,8,9,10,11,12,13,14,15]
+    - name: last_action_num_kicker
+      start: 61
+      end: 64
+      dim: 4
+      semantics: "上一有效动作的带牌数量 one-hot（0/1/2/3）；is_new_round 时全零"
+      visibility_source: public
+      production_derivable: true
+      must_have: false
+      review_required: false
+      encoding:
+        type: one_hot
+        categories: [0,1,2,3]
+    - name: game_status
+      start: 65
+      end: 66
+      dim: 2
+      semantics: "游戏状态标志：dim65=is_new_round（0/1），dim66=current_player_index（0/1）"
+      visibility_source: public
+      production_derivable: true
+      must_have: true
+      review_required: false
+
+action:
+  type: discrete
+  num_actions: 294
+  kicker_selection: "greedy_lowest"
+  kicker_selection_note: "带牌由系统自动选取——从手牌中选 kicker_count 张面值最低且不属于主牌面值集合的牌；kicker_count 由动作索引指定"
+  action_mask_in_info: true
+  sections:
+    - name: pass
+      start: 0
+      end: 0
+      count: 1
+      formation: "none"
+      description: "不出牌（is_new_round 时被掩码为0）"
+    - name: single
+      start: 1
+      end: 13
+      count: 13
+      formation: "single"
+      description: "单牌，idx_offset = face - 3（face ∈ [3,15]）"
+    - name: pocket
+      start: 14
+      end: 25
+      count: 12
+      formation: "pocket"
+      description: "对子，idx_offset = face - 3（face ∈ [3,14]；A 在 16-hand 变种可成对）"
+    - name: s_pocket
+      start: 26
+      end: 76
+      count: 51
+      formation: "s_pocket"
+      description: "连对，按(length, start_face)枚举：len2 start3-13(11)，len3 start3-12(10)，...，len7 start3-8(6)；end ≤ 14(A)"
+    - name: trips_kicker0
+      start: 77
+      end: 88
+      count: 12
+      formation: "trips"
+      kicker_count: 0
+      description: "三条不带，face ∈ [3,14]"
+    - name: trips_kicker1
+      start: 89
+      end: 100
+      count: 12
+      formation: "trips"
+      kicker_count: 1
+      description: "三条带1张（最低可用非主牌）"
+    - name: trips_kicker2
+      start: 101
+      end: 112
+      count: 12
+      formation: "trips"
+      kicker_count: 2
+      description: "三条带2张（最低2张可用非主牌）"
+    - name: s_trips
+      start: 113
+      end: 202
+      count: 90
+      formation: "s_trips"
+      description: "飞机，按(length, kicker_mode)×start_face枚举：len∈[2,4]，kicker∈{0,N,2N}，共(11+10+9)×3=90"
+    - name: quads
+      start: 203
+      end: 246
+      count: 44
+      formation: "quads"
+      description: "四带，face ∈ [3,13]，kicker_count ∈ [0,3]，共11×4=44"
+    - name: straight
+      start: 247
+      end: 282
+      count: 36
+      formation: "straight"
+      description: "顺子，按(length, start_face)枚举：len5 start3-10(8)，...，len12 start3(1)，共36"
+    - name: bomb
+      start: 283
+      end: 293
+      count: 11
+      formation: "bomb"
+      description: "炸弹，face ∈ [3,13]"
+
+review_questions:
+  - "是否泄露对手私有信息？"
+  - "是否遗漏实战决策所需公开信息？"
+  - "是否存在仅离线可见、实战不可见的捷径特征？"
+  - "动作掩码是否覆盖所有非法动作（含 is_new_round 时禁止 pass）？"
+  - "greedy kicker 选取是否可能导致动作冲突（已由 is_legal 验证防止）？"

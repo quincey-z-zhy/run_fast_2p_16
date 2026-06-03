@@ -1,0 +1,45 @@
+# CPU 短训练配置（500K 步，验证收敛）
+# 单环境单进程，eval vs random_legal 每 100K 步一次
+training:
+  total_steps: 500_000
+  n_steps: 2048
+  num_envs: 1
+  batch_size: 256
+  n_epochs: 4
+  eval_freq: 100_000
+  eval_games: 200
+  checkpoint_freq: 250_000
+  log_freq: 20_000
+
+ppo:
+  learning_rate: 3.0e-4
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_eps: 0.2
+  value_coeff: 0.5
+  entropy_coeff: 0.05
+  max_grad_norm: 0.5
+  normalize_advantages: true
+
+network:
+  obs_dim: 80
+  act_dim: 294
+  hidden_dim: 256
+
+self_play:
+  enabled: false
+
+league:
+  enabled: false
+
+eval_opponents:
+  - random_legal
+  - greedy_low
+
+eval_thresholds:
+  stage_6_baseline: 0.65
+  stage_7_main: 0.80
+
+paths:
+  checkpoint_dir: checkpoints/
+  log_dir: logs/training/

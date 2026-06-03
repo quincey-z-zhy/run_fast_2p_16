@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跑得快 16-hand — 人类 vs AI</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a5c2a;
+    color: #f0f0f0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+  }
+
+  h1 { font-size: 1.5rem; margin-bottom: 12px; letter-spacing: 2px; }
+
+  /* ── 主布局：两栏 ── */
+  #layout {
+    display: grid;
+    grid-template-columns: min(580px, 42%) 1fr;
+    gap: 16px;
+    align-items: start;
+    width: 100%;
+    max-width: 1900px;
+  }
+  #left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* ── AI 区域 ── */
+  #ai-area {
+    background: rgba(0,0,0,0.25);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  #ai-area .label { font-size: 0.85rem; color: #aaa; }
+  #ai-hand-display { display: flex; gap: 4px; flex-wrap: wrap; }
+  #toggle-ai-btn {
+    margin-left: auto;
+    background: rgba(255,255,255,0.1);
+    color: #ccc;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #toggle-ai-btn:hover { background: rgba(255,255,255,0.2); }
+
+  /* ── 桌面区域 ── */
+  #table-area {
+    background: #2d7a3a;
+    border-radius: 10px;
+    padding: 16px;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 2px solid rgba(255,255,255,0.15);
+  }
+  #prev-play-label { font-size: 0.8rem; color: #ccc; }
+  #prev-play { font-size: 1.2rem; font-weight: bold; letter-spacing: 1px; }
+  #prev-cards-display { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+
+  /* ── 信息栏 ── */
+  #info-bar {
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 8px 14px;
+    display: flex;
+    gap: 20px;
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+  }
+  #info-bar span { color: #ddd; }
+  #info-bar strong { color: #fff; }
+
+  /* ── 人类手牌 ── */
+  #human-area {
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+  #human-area .label { font-size: 0.85rem; color: #aaa; margin-bottom: 6px; }
+  #human-hand-display { display: flex; gap: 4px; flex-wrap: wrap; }
+
+  /* ── 操作区（右栏，全高粘性） ── */
+  #action-area {
+    background: rgba(0,0,0,0.25);
+    border-radius: 10px;
+    padding: 12px 14px;
+    position: sticky;
+    top: 16px;
+    max-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #action-area .label { font-size: 0.85rem; color: #aaa; margin-bottom: 8px; flex-shrink: 0; }
+  #action-count { color: #7ec8e3; font-weight: bold; }
+  #action-buttons {
+    flex: 1;
+    display: flex; flex-direction: column; gap: 8px;
+    overflow-y: auto;
+    padding-right: 6px;
+  }
+  #action-buttons::-webkit-scrollbar { width: 6px; }
+  #action-buttons::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+  .action-group { display: flex; align-items: flex-start; gap: 6px; flex-wrap: wrap; }
+  .action-group-label {
+    font-size: 0.72rem; color: #999; min-width: 36px;
+    flex-shrink: 0; padding-top: 7px; text-align: right;
+  }
+
+  /* ── 卡片样式 ── */
+  .card {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 44px;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: bold;
+    border: 1px solid rgba(0,0,0,0.3);
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+    cursor: default;
+    user-select: none;
+  }
+  .card-face {
+    background: #fff;
+    color: #222;
+  }
+  .card-face.red { color: #c0392b; }
+  .card-face.high { background: #fff9e6; }
+  .card-back {
+    background: linear-gradient(135deg, #1a3c6e 25%, #2255a0 100%);
+    color: transparent;
+  }
+
+  /* ── 动作按钮 ── */
+  .action-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    padding: 5px 8px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 3px; flex-wrap: wrap;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: normal;
+    min-height: 34px;
+  }
+  .action-btn:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); }
+  .action-btn:active { background: rgba(255,255,255,0.25); }
+  .action-btn.pass-btn {
+    background: rgba(255,255,255,0.05); color: #999;
+    border-color: rgba(255,255,255,0.1);
+    font-size: 0.85rem; font-weight: bold; padding: 6px 14px;
+  }
+  .action-btn.pass-btn:hover { background: rgba(255,255,255,0.12); }
+  .action-btn.bomb-btn { background: rgba(231,76,60,0.2); border-color: rgba(231,76,60,0.6); }
+  .action-btn.bomb-btn:hover { background: rgba(231,76,60,0.35); }
+
+  .action-formation-label {
+    font-size: 0.68rem; color: #bbb; flex-shrink: 0;
+    padding-right: 3px; align-self: center;
+  }
+  .action-btn.bomb-btn .action-formation-label { color: #f88; }
+
+  .action-prob {
+    font-size: 0.7rem; color: #888;
+    margin-left: 6px; align-self: center;
+    font-family: monospace; font-weight: bold;
+  }
+  .action-prob.medium { color: #4aa3ff; }
+  .action-prob.high   { color: #ff9933; }
+
+  .mini-card {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 26px;
+    background: #fff; color: #222;
+    border-radius: 3px; border: 1px solid rgba(0,0,0,0.25);
+    font-size: 0.72rem; font-weight: bold; line-height: 1;
+    flex-shrink: 0;
+  }
+  .mini-card.high-card { background: #fff9e6; color: #c0392b; }
+  .mini-card.kicker-card {
+    background: #fff3cd; color: #c77800;
+    border-color: #ffc107;
+  }
+  .kicker-sep {
+    font-size: 0.62rem; color: #aaa; flex-shrink: 0; padding: 0 1px;
+    align-self: center;
+  }
+
+  /* ── 新游戏按钮 ── */
+  #new-game-btn {
+    background: #27ae60;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 28px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background 0.15s;
+  }
+  #new-game-btn:hover { background: #2ecc71; }
+
+  /* ── 日志 ── */
+  #log-area {
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    padding: 10px 14px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+  #log-area .label { font-size: 0.8rem; color: #aaa; margin-bottom: 6px; }
+  #log-list { font-size: 0.82rem; line-height: 1.7; color: #ccc; }
+  #log-list .you, #log-list .ai {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  }
+  #log-list .you { color: #7ec8e3; }
+  #log-list .ai  { color: #f0a070; }
+  .step-dl-btn {
+    background: rgba(255,255,255,0.08); color: #aaa;
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 4px;
+    font-size: 0.7rem; padding: 1px 6px; cursor: pointer;
+    flex-shrink: 0;
+  }
+  .step-dl-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+
+  /* ── 结果覆盖层 ── */
+  #result-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  #result-overlay.show { display: flex; }
+  #result-box {
+    background: #1e4d28;
+    border: 3px solid #27ae60;
+    border-radius: 16px;
+    padding: 32px 48px;
+    text-align: center;
+  }
+  #result-title { font-size: 2rem; font-weight: bold; margin-bottom: 12px; }
+  #result-detail { font-size: 0.95rem; color: #bbb; margin-bottom: 8px; }
+  #result-scores {
+    display: flex; gap: 32px; justify-content: center;
+    margin-bottom: 16px; font-size: 1.05rem;
+  }
+  #result-scores .score-label { color: #aaa; font-size: 0.8rem; margin-bottom: 2px; }
+  #result-scores .score-val { font-size: 1.5rem; font-weight: bold; }
+  .score-pos { color: #2ecc71; }
+  .score-neg { color: #e74c3c; }
+  .win  { color: #f1c40f; }
+  .lose { color: #e74c3c; }
+
+  /* ── 战绩统计 ── */
+  #stats-bar {
+    background: rgba(0,0,0,0.25);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  #stats-bar .stats-cells {
+    display: flex;
+    flex: 1;
+    gap: 0;
+  }
+  .stats-cell {
+    flex: 1;
+    text-align: center;
+  }
+  .stats-cell .stats-label {
+    font-size: 0.68rem;
+    color: #aaa;
+    margin-bottom: 2px;
+    white-space: nowrap;
+  }
+  .stats-cell .stats-val {
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+  .stats-cell .stats-val.human-val { color: #7ec8e3; }
+  .stats-cell .stats-val.ai-val    { color: #f0a070; }
+  .stats-cell .stats-val.rate-val  { color: #f1c40f; }
+  #reset-stats-btn {
+    background: rgba(255,255,255,0.07);
+    color: #999;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-left: 10px;
+    transition: background 0.15s;
+  }
+  #reset-stats-btn:hover { background: rgba(255,255,255,0.15); color: #ddd; }
+
+  /* ── 等待提示 ── */
+  #waiting { font-size: 0.9rem; color: #aaa; font-style: italic; }
+</style>
+</head>
+<body>
+<h1>♠ 跑得快 — 人类 vs AI ♠</h1>
+
+<div id="layout">
+
+<div id="left-col">
+
+  <!-- AI 区域 -->
+  <div id="ai-area">
+    <div>
+      <div class="label">AI 手牌（<span id="ai-card-count">-</span> 张）</div>
+      <div id="ai-hand-display"></div>
+    </div>
+    <button id="toggle-ai-btn" onclick="toggleAiCards()">显示 AI 手牌</button>
+  </div>
+
+  <!-- 桌面：上一手牌 -->
+  <div id="table-area">
+    <div id="prev-play-label">桌面</div>
+    <div id="prev-play">——</div>
+    <div id="prev-cards-display"></div>
+  </div>
+
+  <!-- 信息栏 -->
+  <div id="info-bar">
+    <span>炸弹数：<strong id="bomb-count">0</strong></span>
+    <span id="round-info">新一轮</span>
+    <span id="turn-info">——</span>
+  </div>
+
+  <!-- 人类手牌 -->
+  <div id="human-area">
+    <div class="label">你的手牌（<span id="human-card-count">-</span> 张）</div>
+    <div id="human-hand-display"></div>
+  </div>
+
+  <!-- 新游戏 -->
+  <button id="new-game-btn" onclick="newGame()">开始新游戏</button>
+
+  <!-- 战绩统计 -->
+  <div id="stats-bar">
+    <div class="stats-cells">
+      <div class="stats-cell">
+        <div class="stats-label">你的胜场</div>
+        <div class="stats-val human-val" id="stats-human-wins">0</div>
+      </div>
+      <div class="stats-cell">
+        <div class="stats-label">AI 胜场</div>
+        <div class="stats-val ai-val" id="stats-ai-wins">0</div>
+      </div>
+      <div class="stats-cell">
+        <div class="stats-label">总场次</div>
+        <div class="stats-val" id="stats-games">0</div>
+      </div>
+      <div class="stats-cell">
+        <div class="stats-label">你的胜率</div>
+        <div class="stats-val rate-val" id="stats-winrate">—</div>
+      </div>
+      <div class="stats-cell">
+        <div class="stats-label">你的累计得分</div>
+        <div class="stats-val human-val" id="stats-human-score">+0</div>
+      </div>
+      <div class="stats-cell">
+        <div class="stats-label">AI 累计得分</div>
+        <div class="stats-val ai-val" id="stats-ai-score">+0</div>
+      </div>
+    </div>
+    <button id="reset-stats-btn" onclick="resetStats()">重置战绩</button>
+  </div>
+
+  <!-- 日志 -->
+  <div id="log-area">
+    <div class="label">出牌记录</div>
+    <div id="log-list"></div>
+  </div>
+
+</div><!-- /#left-col -->
+
+<!-- 操作区（右栏） -->
+<div id="action-area">
+  <div class="label">可用操作 <span id="action-count"></span></div>
+  <div id="action-buttons"><span id="waiting">等待开始……</span></div>
+</div>
+
+</div><!-- /#layout -->
+
+<!-- 结果覆盖层 -->
+<div id="result-overlay">
+  <div id="result-box">
+    <div id="result-title">——</div>
+    <div id="result-scores">
+      <div>
+        <div class="score-label">你的得分</div>
+        <div class="score-val" id="score-human">—</div>
+      </div>
+      <div>
+        <div class="score-label">AI 得分</div>
+        <div class="score-val" id="score-ai">—</div>
+      </div>
+    </div>
+    <div id="result-detail"></div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button onclick="window.location.href='/api/download_record'"
+              style="background:#3498db;color:#fff;border:none;border-radius:8px;
+                     padding:10px 22px;font-size:0.95rem;font-weight:bold;cursor:pointer;">
+        ⬇ 下载牌谱
+      </button>
+      <button id="new-game-btn-overlay" onclick="newGame(); hideResult();"
+              style="background:#27ae60;color:#fff;border:none;border-radius:8px;
+                     padding:10px 28px;font-size:1rem;font-weight:bold;cursor:pointer;">
+        再来一局
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── AI 手牌显示开关 ───────────────────────────────────────────────────────
+let showAiCards = false;
+let lastState = null;
+
+// ── 战绩统计 ──────────────────────────────────────────────────────────────
+let stats = { human: 0, ai: 0, games: 0, humanScore: 0, aiScore: 0 };
+
+function updateStats(winner, humanScore, aiScore) {
+  stats.games++;
+  if (winner === '你') stats.human++;
+  else stats.ai++;
+  if (humanScore !== undefined) stats.humanScore += humanScore;
+  if (aiScore   !== undefined) stats.aiScore   += aiScore;
+  renderStats();
+}
+
+function renderStats() {
+  document.getElementById('stats-human-wins').textContent = stats.human;
+  document.getElementById('stats-ai-wins').textContent    = stats.ai;
+  document.getElementById('stats-games').textContent      = stats.games;
+  const rate = stats.games > 0
+    ? Math.round(stats.human / stats.games * 100) + '%'
+    : '—';
+  document.getElementById('stats-winrate').textContent = rate;
+  const fmtScore = v => (v > 0 ? '+' : '') + v;
+  const hScoreEl = document.getElementById('stats-human-score');
+  const aScoreEl = document.getElementById('stats-ai-score');
+  if (hScoreEl) {
+    hScoreEl.textContent = fmtScore(stats.humanScore);
+    hScoreEl.className = 'stats-val ' + (stats.humanScore >= 0 ? 'human-val' : 'ai-val');
+  }
+  if (aScoreEl) {
+    aScoreEl.textContent = fmtScore(stats.aiScore);
+    aScoreEl.className = 'stats-val ' + (stats.aiScore >= 0 ? 'ai-val' : 'human-val');
+  }
+}
+
+function resetStats() {
+  stats = { human: 0, ai: 0, games: 0, humanScore: 0, aiScore: 0 };
+  renderStats();
+}
+
+function toggleAiCards() {
+  showAiCards = !showAiCards;
+  document.getElementById('toggle-ai-btn').textContent =
+    showAiCards ? '隐藏 AI 手牌' : '显示 AI 手牌';
+  if (lastState) renderAiHand(lastState);
+}
+
+function renderAiHand(state) {
+  const ai = 1 - state.human_index;
+  document.getElementById('ai-card-count').textContent = state.players[ai].num_cards;
+  const aiDisplay = document.getElementById('ai-hand-display');
+  aiDisplay.innerHTML = '';
+  if (showAiCards) {
+    (state.players[ai].cards || []).forEach(f => aiDisplay.appendChild(cardEl(f, true)));
+  } else {
+    for (let i = 0; i < state.players[ai].num_cards; i++) {
+      aiDisplay.appendChild(cardEl(0, false));
+    }
+  }
+}
+
+// ── 牌值 → 显示字符 ──────────────────────────────────────────────────────
+const CARD_CHAR = {3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',
+                   10:'T',11:'J',12:'Q',13:'K',14:'A',15:'2'};
+// 大牌（A、2）显示暖色
+const HIGH_FACES = new Set([14, 15]);
+
+function cardEl(face, faceUp=true) {
+  const el = document.createElement('div');
+  el.className = faceUp
+    ? ('card card-face' + (HIGH_FACES.has(face) ? ' high' : ''))
+    : 'card card-back';
+  el.textContent = faceUp ? (CARD_CHAR[face] || '?') : '';
+  return el;
+}
+
+function renderCards(container, cards, faceUp=true) {
+  container.innerHTML = '';
+  if (!cards || cards.length === 0) return;
+  cards.forEach(f => container.appendChild(cardEl(f, faceUp)));
+}
+
+// ── 状态更新 ──────────────────────────────────────────────────────────────
+function updateUI(state) {
+  lastState = state;
+  const h = state.human_index;
+  const ai = 1 - h;
+
+  // AI 手牌（正/背面由开关控制）
+  renderAiHand(state);
+
+  // 桌面：上一出牌
+  document.getElementById('prev-play').textContent = state.previous_play || '——';
+  renderCards(document.getElementById('prev-cards-display'), state.previous_cards || [], true);
+
+  // 信息栏
+  document.getElementById('bomb-count').textContent = state.num_bomb;
+  document.getElementById('round-info').textContent =
+    state.is_new_round ? '🔄 新一轮' : '跟牌';
+  document.getElementById('turn-info').textContent =
+    state.game_over ? '游戏结束'
+    : (state.is_human_turn ? '⬆️ 你的回合' : '⏳ AI 思考中…');
+
+  // 人类手牌
+  document.getElementById('human-card-count').textContent = state.hand_cards.length;
+  renderCards(document.getElementById('human-hand-display'), state.hand_cards, true);
+
+  // 操作按钮
+  renderActions(state);
+
+  // 日志
+  const logEl = document.getElementById('log-list');
+  logEl.innerHTML = '';
+  const log = state.action_log || [];
+  log.slice().reverse().forEach((entry, i) => {
+    const step = log.length - 1 - i;  // 与 snapshot 索引对齐
+    const div = document.createElement('div');
+    div.className = entry.startsWith('你') ? 'you' : 'ai';
+
+    const text = document.createElement('span');
+    text.textContent = entry;
+    div.appendChild(text);
+
+    const btn = document.createElement('button');
+    btn.className = 'step-dl-btn';
+    btn.title = `下载第 ${step} 步状态 (JSONL)`;
+    btn.textContent = '⬇';
+    btn.onclick = () => { window.location.href = `/api/download_step/${step}`; };
+    div.appendChild(btn);
+
+    logEl.appendChild(div);
+  });
+
+  // 结局
+  if (state.game_over && state.winner) {
+    showResult(state);
+  }
+}
+
+// 牌型展示顺序
+const FORMATION_ORDER = ['不出','单牌','对子','连对','三条','飞机','四带','顺子','炸弹'];
+
+function getFormationType(desc) {
+  if (desc === '不出') return '不出';
+  const idx = desc.indexOf('：');
+  return idx >= 0 ? desc.slice(0, idx) : desc;
+}
+
+function miniCardEl(face, isKicker) {
+  const el = document.createElement('span');
+  let cls = 'mini-card';
+  if (isKicker)             cls += ' kicker-card';
+  else if (HIGH_FACES.has(face)) cls += ' high-card';
+  el.className = cls;
+  el.textContent = CARD_CHAR[face] || '?';
+  return el;
+}
+
+function probClass(p, isMax) {
+  if (isMax) return 'action-prob high';
+  if (p > 0.2) return 'action-prob medium';
+  return 'action-prob';
+}
+
+function makeActionBtn(va, isMaxProb) {
+  const btn = document.createElement('button');
+  btn.className = 'action-btn';
+  btn.onclick = () => sendAction(va.id);
+
+  if (va.desc === '不出') {
+    btn.classList.add('pass-btn');
+    btn.textContent = '不出';
+    if (typeof va.probability === 'number') {
+      const probEl = document.createElement('span');
+      probEl.className = probClass(va.probability, isMaxProb);
+      probEl.textContent = va.probability.toFixed(3);
+      btn.appendChild(probEl);
+    }
+    return btn;
+  }
+
+  const isBomb = va.desc.startsWith('炸弹');
+  if (isBomb) btn.classList.add('bomb-btn');
+
+  // Formation name label
+  const fname = getFormationType(va.desc);
+  const label = document.createElement('span');
+  label.className = 'action-formation-label';
+  label.textContent = fname;
+  btn.appendChild(label);
+
+  // Main cards (white chips)
+  (va.main_cards || []).forEach(face => btn.appendChild(miniCardEl(face, false)));
+
+  // Kicker/tail cards (orange chips), separated by '+'
+  if (va.tail_cards && va.tail_cards.length > 0) {
+    const sep = document.createElement('span');
+    sep.className = 'kicker-sep';
+    sep.textContent = '+';
+    btn.appendChild(sep);
+    va.tail_cards.forEach(face => btn.appendChild(miniCardEl(face, true)));
+  }
+
+  // NN probability label (colour by magnitude; 3 decimals)
+  if (typeof va.probability === 'number') {
+    const probEl = document.createElement('span');
+    probEl.className = probClass(va.probability, isMaxProb);
+    probEl.textContent = va.probability.toFixed(3);
+    btn.appendChild(probEl);
+  }
+
+  return btn;
+}
+
+function renderActions(state) {
+  const container = document.getElementById('action-buttons');
+  const countEl   = document.getElementById('action-count');
+  container.innerHTML = '';
+  countEl.textContent = '';
+
+  if (state.game_over) {
+    container.innerHTML = '<span style="color:#aaa">游戏已结束</span>';
+    return;
+  }
+  if (!state.is_human_turn) {
+    container.innerHTML = '<span id="waiting">⏳ AI 正在思考……</span>';
+    return;
+  }
+
+  const vas = (state.valid_actions || []).filter(va => va.type === 'main');
+  countEl.textContent = `(${vas.length})`;
+  if (vas.length === 0) {
+    container.innerHTML = '<span style="color:#aaa">无可用动作</span>';
+    return;
+  }
+
+  // Find max probability for orange highlighting (tie → all tied actions are orange)
+  const maxProb = Math.max(...vas.map(v => v.probability ?? -1));
+
+  // Group by formation type
+  const groups = {};
+  vas.forEach(va => {
+    const type = getFormationType(va.desc);
+    if (!groups[type]) groups[type] = [];
+    groups[type].push(va);
+  });
+
+  // Render in canonical order
+  const types = FORMATION_ORDER.filter(t => groups[t]);
+  // Any formation not in FORMATION_ORDER appended at end
+  Object.keys(groups).forEach(t => { if (!types.includes(t)) types.push(t); });
+
+  types.forEach(type => {
+    const row = document.createElement('div');
+    row.className = 'action-group';
+
+    const label = document.createElement('span');
+    label.className = 'action-group-label';
+    label.textContent = type;
+    row.appendChild(label);
+
+    groups[type].forEach(va => row.appendChild(makeActionBtn(va, va.probability === maxProb)));
+    container.appendChild(row);
+  });
+}
+
+// ── API 调用 ──────────────────────────────────────────────────────────────
+function newGame() {
+  fetch('/api/new_game', {method: 'POST'})
+    .then(r => r.json())
+    .then(state => { hideResult(); updateUI(state); })
+    .catch(e => alert('网络错误：' + e));
+}
+
+function sendAction(actionId) {
+  // 禁用所有按钮防止重复点击
+  document.querySelectorAll('.action-btn').forEach(b => b.disabled = true);
+  document.getElementById('turn-info').textContent = '⏳ 处理中…';
+
+  fetch('/api/action', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({human_action_id: actionId})
+  })
+    .then(r => r.json())
+    .then(state => {
+      if (state.error) { alert('错误：' + state.error); return; }
+      updateUI(state);
+    })
+    .catch(e => alert('网络错误：' + e));
+}
+
+// ── 结果覆盖层 ────────────────────────────────────────────────────────────
+function showResult(state) {
+  const overlay = document.getElementById('result-overlay');
+  const title   = document.getElementById('result-title');
+  const detail  = document.getElementById('result-detail');
+
+  const youWon = (state.winner === '你');
+  title.textContent = youWon ? '🎉 你赢了！' : '🤖 AI 赢了！';
+  title.className = youWon ? 'win' : 'lose';
+  // Scores
+  let humanScore, aiScore;
+  if (state.scores) {
+    const h = state.human_index;
+    humanScore = state.scores[h];
+    aiScore    = state.scores[1 - h];
+    const hEl = document.getElementById('score-human');
+    const aEl = document.getElementById('score-ai');
+    hEl.textContent = (humanScore > 0 ? '+' : '') + humanScore;
+    hEl.className = 'score-val ' + (humanScore > 0 ? 'score-pos' : 'score-neg');
+    aEl.textContent = (aiScore > 0 ? '+' : '') + aiScore;
+    aEl.className = 'score-val ' + (aiScore > 0 ? 'score-pos' : 'score-neg');
+  }
+  updateStats(state.winner, humanScore, aiScore);
+
+  // Detail text
+  const parts = [];
+  if (state.is_spring) parts.push(youWon ? '🌸 春天！对手一张未出。' : '😅 你一张未出……');
+  if (state.num_bomb > 0) parts.push(`💥 共打出 ${state.num_bomb} 个炸弹`);
+  detail.textContent = parts.join('　');
+
+  overlay.classList.add('show');
+}
+
+function hideResult() {
+  document.getElementById('result-overlay').classList.remove('show');
+}
+
+// ── 初始化 ────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // 页面加载后直接开始一局
+  newGame();
+});
+</script>
+</body>
+</html>

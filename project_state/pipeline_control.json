@@ -1,0 +1,44 @@
+{
+  "mode": "full-auto",
+  "game_id": "run_fast_2p_16_v0",
+  "gpu_config": {
+    "ssh_host": "root@34.96.143.142",
+    "ssh_port": 10031,
+    "ssh_key": "~/.ssh/id_rsa",
+    "remote_workdir": "/root/run_fast_2p_16_v0",
+    "status": "verified",
+    "verified_at": "2026-06-01"
+  },
+  "human_rough_idea": "PPO 自我博弈（Deep RL）。神经网络 policy，通过自我博弈持续迭代，PPO 训练。obs 设计：手牌 one-hot（13 维 × max_count）+ remain_cards（13 维）+ 上一动作编码 + 是否新一轮。需要 action masking 处理复杂离散动作空间。奖励稀疏（终局得分），需考虑 reward shaping。",
+  "modules": {},
+  "current_skill": "model-training",
+  "skill_chain": [
+    "game-rules-confirmation",
+    "env-development",
+    "ai-strategy",
+    "model-training",
+    "model-delivery"
+  ],
+  "completed_skills": ["game-rules-confirmation", "env-development", "ai-strategy"],
+  "blocked_at": null,
+  "block_reason": null,
+  "rework": {
+    "status": null,
+    "reason": null,
+    "target_stage": null,
+    "target_docs": [],
+    "advance_locked": false
+  },
+  "global_constraints": [
+    "有回放时规则确认优先服从回放行为",
+    "obs 完成后必须评审",
+    "正式训练与最终评估必须尽量对齐 production profile",
+    "所有文档产出必须中文，不允许占位符",
+    "运行态目录不是事实源，project_spec/ 才是"
+  ],
+  "stage_constraints": {
+    "stage_4": ["优先完成 replay parity、obs review 和 env benchmark"],
+    "stage_5": ["不要默认 RL 就是正解，必须比较 heuristic、SL、CFR、RL 与 hybrid", "先给出推荐主路线与 baseline 路线，再决定是否需要 GPU env"],
+    "stage_7": ["formal training 结论应基于 production profile", "正式训练前优先确认 throughput report 和 remote doctor"]
+  }
+}
