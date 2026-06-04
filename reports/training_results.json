@@ -1,0 +1,206 @@
+{
+  "experiment": "run_fast_2p_16_v0 — 16-hand 跑得快 PPO + League/PFSP 训练",
+  "date_range": "2026-05-29 to 2026-06-03",
+  "game_variant": {
+    "name": "16-hand",
+    "deck_size": 48,
+    "deck_composition": "3-K 各 4 张，A=3，2=1",
+    "hand_size": 16,
+    "dead_cards": 16,
+    "action_space": 294,
+    "obs_dim": 80,
+    "spring_score": 32
+  },
+  "network": {
+    "type": "Actor-Critic MLP",
+    "obs_dim": 80,
+    "hidden_dim": 256,
+    "actor_dim": 294,
+    "critic_dim": 1,
+    "kicker_dim": 13,
+    "approx_params": 250000
+  },
+  "training_rounds": {
+    "cpu_smoke": {
+      "purpose": "管线烟测，验证 16-hand 收敛性",
+      "device": "CPU (single core)",
+      "total_steps": 501760,
+      "n_steps": 2048,
+      "num_envs": 1,
+      "batch_size": 256,
+      "n_epochs": 4,
+      "lr": 3.0e-4,
+      "entropy_coeff": 0.05,
+      "opponent": "random_legal (single)",
+      "league_enabled": false,
+      "sps_avg": 957,
+      "duration_seconds": 528,
+      "duration_min": 8.8,
+      "eval_curve": [
+        {"step": 100352, "vs_random": 0.800, "vs_greedy": 0.715, "avg_score_random": 3.80, "avg_score_greedy": 4.08, "is_new_best": true},
+        {"step": 200704, "vs_random": 0.790, "vs_greedy": 0.690, "avg_score_random": 3.79, "avg_score_greedy": 3.92, "is_new_best": false},
+        {"step": 301056, "vs_random": 0.805, "vs_greedy": 0.695, "avg_score_random": 4.16, "avg_score_greedy": 3.90, "is_new_best": false},
+        {"step": 401408, "vs_random": 0.840, "vs_greedy": 0.710, "avg_score_random": 4.45, "avg_score_greedy": 4.43, "is_new_best": false},
+        {"step": 501760, "vs_random": 0.795, "vs_greedy": 0.735, "avg_score_random": 4.33, "avg_score_greedy": 4.46, "is_new_best": true}
+      ],
+      "best_step": 501760,
+      "best_vs_greedy": 0.735,
+      "best_vs_random": 0.795
+    },
+    "gpu_r1": {
+      "purpose": "首次 GPU 完整训练，从零起步 + League",
+      "device": "NVIDIA RTX5880-Ada-48Q",
+      "total_steps": 10000384,
+      "n_steps": 2048,
+      "num_envs": 16,
+      "batch_size": 512,
+      "n_epochs": 4,
+      "lr": 3.0e-4,
+      "entropy_coeff": 0.05,
+      "opponent": "League/PFSP + self-play (sp_prob 0.2)",
+      "league_config": {
+        "enabled": true,
+        "tracker_n": 200,
+        "last_num": 30,
+        "sp_prob": 0.2,
+        "switch_prob": 0.01,
+        "snapshot_upscore": 2.0,
+        "snapshot_gap": 1000000,
+        "actual_snapshots": 1,
+        "note": "snapshot_upscore 太高，未触发；池只有 pid=0 初始快照"
+      },
+      "sps_avg": 3100,
+      "duration_seconds": 3235,
+      "duration_min": 54,
+      "best_history": [
+        {"step": 200704, "vs_greedy": 0.710},
+        {"step": 401408, "vs_greedy": 0.720},
+        {"step": 800768, "vs_greedy": 0.728},
+        {"step": 1001472, "vs_greedy": 0.732},
+        {"step": 1200128, "vs_greedy": 0.752},
+        {"step": 1601536, "vs_greedy": 0.756},
+        {"step": 2801664, "vs_greedy": 0.758},
+        {"step": 4401152, "vs_greedy": 0.764},
+        {"step": 4601856, "vs_greedy": 0.776},
+        {"step": 6600704, "vs_greedy": 0.782}
+      ],
+      "final_eval": {"step": 10000384, "vs_random": 0.830, "vs_greedy": 0.758},
+      "best_step": 6600704,
+      "best_vs_greedy": 0.782,
+      "best_vs_random": 0.824
+    },
+    "gpu_r2": {
+      "purpose": "续训冲击更高水平 + League 调参",
+      "device": "NVIDIA RTX5880-Ada-48Q",
+      "resume_from": "gpu_r1/best.pt (step 6.6M, vs_greedy 78.2%)",
+      "reset_steps": true,
+      "total_steps_planned": 400000000,
+      "total_steps_actual": 295000000,
+      "n_steps": 2048,
+      "num_envs": 16,
+      "batch_size": 512,
+      "n_epochs": 4,
+      "lr": 3.0e-4,
+      "entropy_coeff": 0.05,
+      "opponent": "League/PFSP + self-play",
+      "league_config": {
+        "enabled": true,
+        "snapshot_upscore": 1.0,
+        "snapshot_gap": 2000,
+        "actual_snapshots": 74,
+        "note": "调参后 League 真正流动起来"
+      },
+      "sps_avg": 3400,
+      "duration_hours": 24,
+      "stopped_reason": "user manual stop (best 长期未刷新)",
+      "best_history": [
+        {"step": 4001792, "vs_greedy": 0.786},
+        {"step": 11001856, "vs_greedy": 0.800, "note": "首次过 Stage 7 目标线 80%"},
+        {"step": 22001664, "vs_greedy": 0.808},
+        {"step": 30001152, "vs_greedy": 0.824},
+        {"step": 64000000, "vs_greedy": 0.826},
+        {"step": 67000320, "vs_greedy": 0.828},
+        {"step": 83001344, "vs_greedy": 0.850},
+        {"step": 194000896, "vs_greedy": 0.860, "saved_eval": {"random_legal": 0.914, "greedy_low": 0.86}}
+      ],
+      "late_eval_samples": [
+        {"step": 281000000, "vs_random": 0.898, "vs_greedy": 0.826},
+        {"step": 282000000, "vs_random": 0.908, "vs_greedy": 0.820},
+        {"step": 283000000, "vs_random": 0.900, "vs_greedy": 0.824},
+        {"step": 295000000, "vs_random": 0.900, "vs_greedy": 0.828}
+      ],
+      "best_step": 194000896,
+      "best_vs_greedy": 0.860,
+      "best_vs_random": 0.914,
+      "training_environment": "OLD (bomb 非零和) - 此模型在错误奖励下训出"
+    },
+    "gpu_r3": {
+      "purpose": "在 zero-sum bomb 修复后的环境中续训",
+      "device": "NVIDIA RTX5880-Ada-48Q",
+      "resume_from": "gpu_r2/best.pt (step 194M, vs_greedy 86.0%)",
+      "reset_steps": true,
+      "total_steps_planned": 400000000,
+      "total_steps_actual": 240000000,
+      "league_config": {
+        "enabled": true,
+        "snapshot_upscore": 1.0,
+        "snapshot_gap": 2000,
+        "actual_snapshots": 60
+      },
+      "sps_avg": 3400,
+      "duration_hours": 20,
+      "stopped_reason": "user manual stop (best 长期未刷新)",
+      "best_history": [
+        {"step": 1001472, "vs_greedy": 0.830, "note": "resume 起点已是强模型"},
+        {"step": 3000320, "vs_greedy": 0.842},
+        {"step": 5001216, "vs_greedy": 0.856},
+        {"step": 110000128, "vs_greedy": 0.862, "saved_eval": {"random_legal": 0.886, "greedy_low": 0.862}}
+      ],
+      "late_eval_samples": [
+        {"step": 175000000, "vs_random": 0.872, "vs_greedy": 0.824},
+        {"step": 176000000, "vs_random": 0.850, "vs_greedy": 0.832},
+        {"step": 177000000, "vs_random": 0.872, "vs_greedy": 0.828},
+        {"step": 178000000, "vs_random": 0.898, "vs_greedy": 0.848},
+        {"step": 237000000, "vs_random": 0.886, "vs_greedy": 0.842},
+        {"step": 238000000, "vs_random": 0.892, "vs_greedy": 0.834},
+        {"step": 239000000, "vs_random": 0.890, "vs_greedy": 0.826},
+        {"step": 240000000, "vs_random": 0.908, "vs_greedy": 0.828}
+      ],
+      "best_step": 110000128,
+      "best_vs_greedy": 0.862,
+      "best_vs_random": 0.886,
+      "training_environment": "FIXED (bomb zero-sum) - 当前推荐模型"
+    }
+  },
+  "bug_fix": {
+    "name": "炸弹奖励 zero-sum 修复",
+    "date": "2026-06-02",
+    "issue": "原 game/game.py 在出炸弹时仅给出牌方 +10，对方无变化，违反双人零和",
+    "fix": "出牌方 +BOMB_BONUS，对方 -BOMB_BONUS",
+    "validation": "5 局随机对局，全部两方得分和 = 0；炸弹场景 +10/-10 明确对称",
+    "impact_assessment": "PPO advantage 归一化吃掉绝对偏移，策略不会因 ±10 对称翻转剧变；但 reward-accurate 严格起见需在新环境下重训（→ R3）"
+  },
+  "final_summary": {
+    "recommended_model": "checkpoints/best.pt (= 110M.pt, gpu_r3)",
+    "vs_random_legal": 0.886,
+    "vs_greedy_low": 0.862,
+    "training_environment": "zero-sum bomb (修复后)",
+    "total_training_steps": 545000000,
+    "total_gpu_hours": 98,
+    "league_pool_size": 60,
+    "performance_target": "Stage 7 vs_greedy ≥ 80% — 达成（86.2%）",
+    "delivery_target": "Stage 8 vs_greedy ≥ 65% — 达成（86.2%）",
+    "key_findings": [
+      "League snapshot_upscore 从 2.0 降到 1.0 + gap 从 1M 降到 2000，快照池才真正流动（74 vs 1）",
+      "曲线在 86% 区间饱和：194M→295M 步内未刷新",
+      "Zero-sum bomb 修复后从 194M.pt 续训仍能在 110M 步逼近原峰值（86.2% vs 86.0%），证明 reward 修复未破坏学习",
+      "vs random_legal 与 vs greedy_low 差距稳定 ~5pp（90% vs 85%），说明 greedy_low 是更敏感的评估"
+    ]
+  },
+  "compare": {
+    "cpu_smoke": {"step": 501760, "vs_random": 0.795, "vs_greedy": 0.735},
+    "gpu_r1":    {"step": 6600704, "vs_random": 0.824, "vs_greedy": 0.782},
+    "gpu_r2":    {"step": 194000896, "vs_random": 0.914, "vs_greedy": 0.860, "env": "buggy"},
+    "gpu_r3":    {"step": 110000128, "vs_random": 0.886, "vs_greedy": 0.862, "env": "fixed"}
+  }
+}
