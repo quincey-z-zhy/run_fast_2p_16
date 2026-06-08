@@ -14,9 +14,14 @@ build/
 venv/
 /env/
 
-# Checkpoints & model weights (large binaries)
+# Checkpoints & model weights — 默认全部 ignore，只把生产/里程碑 ckpt 走 LFS 入库
+# .gitignore 不支持行内注释，所以注释放到上方
 checkpoints/*.pt
 checkpoints/*.pth
+# 生产模型（= 110M.pt, vs greedy 86.2%, zero-sum 修复后训出）
+!checkpoints/best.pt
+# 重要里程碑（vs greedy 86.0%, 旧奖励环境训出）
+!checkpoints/194M.pt
 
 # Training & benchmark logs
 logs/
